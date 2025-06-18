@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Step Checkout</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+
+    /* package and payment card**/
+
+    .package-container {
+      display: flex;
+    }
+
+   .package-card, .payment-card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0d47a1, #1976d2); /* Deep blue gradient */
+      color: #fff;
+      border-radius: 1rem;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .package-card::before,
+    .payment-card::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent 50%);
+      transform: rotate(25deg);
+      z-index: 0;
+    }
+
+    .package-card .card-body,
+    .payment-card .card-body {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Selected & Hover Styles */
+    .package-card:hover,
+    .payment-card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .package-card.selected,
+    .payment-card.selected {
+      background: linear-gradient(135deg, #0d6efd, #1a73e8); /* blue gradient for selected */
+      color: #fff;
+      box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.2);
+      border: 2px solid #0a58ca;
+    }
+
+    /* Custom base background overrides */
+    .payment-card.mpesa {
+      background: #28a745 !important; /* Base green */
+    }
+
+    .payment-card.airtel {
+      background: #d32f2f !important; /* Base red */
+    }
+
+    /* Hover Effects for Custom Cards */
+    .payment-card.mpesa:hover {
+      border: 3px solid #0a58ca;
+    }
+
+    .payment-card.airtel:hover {
+      border: 3px solid #0a58ca;
+    }
+
+    /* Selected States for Custom Cards */
+    .payment-card.mpesa.selected {
+      border: 5px solid #0a58ca;
+    }
+
+    .payment-card.airtel.selected {
+      border: 5px solid #0a58ca;
+    }
+
+
+
+
+
+
+    /* modal**/
+
+      .modal-content {
+      background: 
+        linear-gradient(rgba(255, 255, 255, 0.2), rgba(224, 227, 230, 0.3)),
+        url('./assets/balls.jpg'); /* You can replace with any pattern */
+      background-blend-mode: overlay;
+      background-size: cover;
+      /*color: white;*/
+      border-radius: 1rem;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+      border: none;
+    }
+
+
+    .modal-title {
+      font-weight: bold;
+      font-size: 1.5rem;
+    }
+
+
+
+
+
+
+  </style>
+</head>
+<body>
+    <!-- Launch Button -->
+<div class="text-center mt-5">
+  <button class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#paymentModal">
+    <i class="bi bi-credit-card-fill me-1"></i> Open Checkout
+  </button>
+</div>
+
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="paymentModalLabel">Payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-4 text-center">
+          <span class="badge bg-primary" id="step1Badge">1</span> Packages →
+          <span class="badge bg-secondary" id="step2Badge">2</span> Category →
+          <span class="badge bg-secondary" id="step3Badge">3</span> Method →
+          <span class="badge bg-secondary" id="step4Badge">4</span> Number →
+          <span class="badge bg-secondary" id="step5Badge">5</span> Summary
+
+        </div>
+
+        <form>
+          <!-- Step 1: Choose Package -->
+          <!-- Step 1 -->
+           <!-- <div id="step1" class="container py-4"> 
+            <h2 class="text-center" style="color: #0b4fb5; font-weight: bolder; margin-top: 30px;">
+               Choose a Package
+            </h2>
+            <p class="text-center text-muted mb-4">Select a plan that fits your needs</p>
+            <div class="row g-4 justify-content-center text-center p-3">
+                <div class="col-12 col-md-4">
+                <div class="card package-card h-100" onclick="selectPackage('VIP', 1200, this)">
+                    <div class="card-body">
+                    <i class="bi bi-star-fill display-4"></i>
+                    <h5 class="mt-2">VIP</h5>
+                    <p>Ksh 1200</p>
+                    </div>
+                </div>
+                </div>
+                <div class="col-12 col-md-4">
+                <div class="card package-card h-100" onclick="selectPackage('Premium', 800, this)">
+                    <div class="card-body">
+                    <i class="bi bi-gem display-4"></i>
+                    <h5 class="mt-2">Premium</h5>
+                    <p>Ksh 800</p>
+                    </div>
+                </div>
+                </div>
+                <div class="col-12 col-md-4">
+                <div class="card package-card h-100" onclick="selectPackage('Basic', 500, this)">
+                    <div class="card-body">
+                    <i class="bi bi-box-fill display-4"></i>
+                    <h5 class="mt-2">Basic</h5>
+                    <p>Ksh 500</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <input type="hidden" id="package" required>
+            <input type="hidden" id="amount" required>
+            <div class="mt-4 text-end">
+                <button type="button" class="btn btn-primary px-4" onclick="goToStep2()">Next <i class="bi bi-arrow-right-circle ms-1"></i></button>
+            </div>
+            </div>
+          -->
+            <!-- Step 1 -->
+            <div id="step1" class="container py-4"> 
+              <h2 class="text-center" style="color: #0b4fb5; font-weight: bolder; margin-top: 30px;">
+                Choose a Package
+              </h2>
+              <p class="text-center text-muted mb-4">Select a plan that fits your needs</p>
+
+              <div class="row g-4 justify-content-center text-center p-3" id="packageContainer">
+                <!-- Fetched package cards will be injected here -->
+              </div>
+
+              <input type="hidden" id="package" required>
+              <input type="hidden" id="amount" required>
+
+              <div class="mt-4 text-end">
+                <button type="button" class="btn btn-primary px-4" onclick="goToStep2()">Next <i class="bi bi-arrow-right-circle ms-1"></i></button>
+              </div>
+            </div>
+
+          <!-- Step 2: Choose Category -->
+          <div id="step2" class="container py-4" style="display: none;">
+            <h2 class="text-center" style="color: #0b4fb5; font-weight: bolder; margin-top: 30px;">
+               Choose Payment Category
+            </h2>
+            <p class="text-center text-muted mb-4">Select how you would like to pay</p>
+            <div class="row g-4 justify-content-center text-center p-3">
+              <div class="col-12 col-md-3">
+                <div class="card payment-card p-3 h-100" onclick="selectCategory('mobile', this)">
+                  <div class="card-body">
+                    <i class="bi bi-phone display-4"></i>
+                    <h6>Mobile Money</h6>
+                  </div>
+                </div>
+              </div>
+              <!--<div class="col-12 col-md-3">
+                <div class="card payment-card p-3 h-100" onclick="selectCategory('wallet', this)">
+                  <div class="card-body">
+                    <i class="bi bi-wallet2 display-4"></i>
+                    <h6>Digital Wallets</h6>
+                  </div>
+                </div>
+              </div>-->
+              <div class="col-12  col-md-3">
+                <div class="card payment-card p-3 h-100" onclick="selectCategory('bank', this)">
+                  <div class="card-body">
+                    <i class="bi bi-bank display-4"></i>
+                    <h6>Bank Transfer</h6>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-md-3">
+                <div class="card payment-card p-3 h-100" onclick="selectCategory('card', this)">
+                  <div class="card-body">
+                    <i class="bi bi-credit-card display-4"></i>
+                    <h6>Card</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="paymentCategory">
+            <div class="mt-4 d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" onclick="goToStep1()">← Back</button>
+              <button type="button" class="btn btn-primary" onclick="goToStep3()">Next →</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Choose Method -->
+          <div id="step3" class="container py-4" style="display: none;">
+             <h2 class="text-center" style="color: #0b4fb5; font-weight: bolder; margin-top: 30px;">
+                Choose Payment Method
+            </h2>
+            <div class="row g-3 justify-content-center text-center p-3" id="methodContainer">
+                <!--mobile pay-->
+             <!-- MPESA -->
+              <div class="col-12 col-md-3 method-card" data-category="mobile">
+                <div class="card payment-card mpesa p-3 h-100" onclick="selectMethod('MPESA', this)">
+                  <div class="card-body text-center">
+                    <img src="assets/mpesa.png" class="img-fluid" alt="MPESA Logo" style="filter: brightness(0) invert(1);" />
+                    <h6 style="opacity: 0.8; color: white;">MPESA</h6>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Airtel Money -->
+              <div class="col-12 col-md-3 method-card" data-category="mobile">
+                <div class="card payment-card airtel p-3 h-100" onclick="selectMethod('Airtel Money', this)">
+                  <div class="card-body text-center">
+                    <img src="assets/airtel-money.webp" class="img-fluid" alt="Airtel Money Logo" style="filter: brightness(0) invert(1);" />
+                    <h6 style="opacity: 0.8; color: white;">Airtel Money</h6>
+                  </div>
+                </div>
+              </div>
+
+               <!--wallet pay-->
+              <!--<div class="col-md-3 method-card" data-category="wallet">
+                <div class="card payment-card p-3 h-100" onclick="selectMethod('Paypal', this)">
+                  <div class="card-body">
+                    <i class="bi bi-paypal display-4"></i>
+                    <h6>Paypal</h6>
+                  </div>
+                </div>
+              </div>-->
+              <div class="col-12 col-md-3 method-card" data-category="bank">
+              <div class="card payment-card p-3 h-100" onclick="selectMethod('Bank Transfer', this)">
+                <div class="card-body text-center">
+                  <img src="./assets/coop-bank.png"
+                      class="img-fluid mb-2"
+                      alt="Co-Op Bank Logo"
+                      style="width: 60px; height: auto; filter: brightness(0) invert(1);" />
+                  <h6>Co-Op Bank</h6>
+                </div>
+              </div>
+            </div>
+
+              <div class="col-12 col-md-3 method-card" data-category="card">
+                <div class="card payment-card p-3 h-100" onclick="selectMethod('VISA', this)">
+                  <div class="card-body">
+                    <i class="bi bi-credit-card display-4"></i>
+                    <h6>VISA</h6>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-3 method-card" data-category="card">
+                <div class="card payment-card p-3 h-100" onclick="selectMethod('Mastercard', this)">
+                  <div class="card-body">
+                    <i class="bi bi-credit-card display-4"></i>
+                    <h6>Mastercard</h6>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="paymentMethod">
+            <div class="mt-4 d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" onclick="goToStep2()">← Back</button>
+              <button type="button" class="btn btn-success" onclick="goToStep4()">Next →</button>
+            </div>
+          </div>
+
+
+          <!-- Step 4: Phone Number (Only for MPESA or Airtel Money) -->
+          <div id="step4" class="container py-4" style="display: none;">
+            <h5 class="text-center mb-4">Enter Mobile Number</h5>
+            <div class="mb-3 px-3">
+              <label for="phoneNumber" class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" id="phoneNumber" placeholder="07XXXXXXXX">
+            </div>
+            <div class="mt-4 d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" onclick="goToStep3()">← Back</button>
+              <button type="button" class="btn btn-success" onclick="goToStep5()">Next →</button>
+            </div>
+          </div>
+
+
+          <!-- Step 5: Summary -->
+          <div id="step5" class="container py-4" style="display: none;">
+            <h5 class="text-center mb-4">Confirm Your Payment</h5>
+            <div class="border p-3 rounded bg-light">
+              <p><strong>Package:</strong> <span id="summaryPackage"></span></p>
+              <hr/>
+              <p><strong>Amount:</strong> Ksh<span id="summaryAmount"></span></p>
+              <p>
+                <hr/>
+                <strong>Payment Method:</strong> <span id="summaryMethod"></span>
+              </p>
+              <p id="summaryPhoneContainer" style="display: none;">
+                <hr/>
+                <strong>Phone Number:</strong> <span id="summaryPhone"></span>
+              </p>
+            </div>
+            <div class="mt-4 d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" onclick="goBackToPhone()">← Back</button>
+              <button type="button" class="btn btn-success" onclick="confirmPayment()">Confirm & Pay →</button>
+            </div>
+          </div>
+
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+
+    function selectPackage(name, amount, el) {
+        document.getElementById("package").value = name;
+        document.getElementById("amount").value = amount;
+
+        // Deselect all cards
+        document.querySelectorAll(".package-card").forEach(card => {
+            card.classList.remove("selected");
+        });
+
+        // Select the clicked one
+        el.classList.add("selected");
+    }
+
+    function updateStepBadge(step) {
+      for (let i = 1; i <= 5; i++) {
+        const badge = document.getElementById(`step${i}Badge`);
+        if (badge) badge.className = `badge ${i === step ? 'bg-primary' : 'bg-secondary'}`;
+      }
+    }
+
+
+
+      function goToStep1() {
+        hideAll();
+        document.getElementById("step1").style.display = "block";
+        updateStepBadge(1);
+      }
+
+      function goToStep2() {
+        hideAll();
+        document.getElementById("step2").style.display = "block";
+        updateStepBadge(2);
+      }
+
+      function goToStep3() {
+        const cat = document.getElementById("paymentCategory").value;
+        if (!cat) return alert("Please select a category.");
+
+        document.querySelectorAll(".method-card").forEach(card => {
+          card.style.display = card.dataset.category === cat ? "block" : "none";
+        });
+
+        hideAll();
+        document.getElementById("step3").style.display = "block";
+        updateStepBadge(3);
+      }
+
+      function goToStep4() {
+      const method = document.getElementById("paymentMethod").value;
+      if (!method) return alert("Please select a payment method.");
+
+      // If MPESA or Airtel, go to phone step
+      if (["MPESA", "Airtel Money"].includes(method)) {
+        hideAll();
+        document.getElementById("step4").style.display = "block";
+        updateStepBadge(4);
+      } else {
+        goToStep5(); // Skip to summary
+      }
+    }
+
+
+
+      function goToStep5() {
+      const phone = document.getElementById("phoneNumber").value;
+      document.getElementById("summaryPackage").innerText = document.getElementById("package").value;
+      document.getElementById("summaryAmount").innerText = document.getElementById("amount").value;
+      document.getElementById("summaryMethod").innerText = document.getElementById("paymentMethod").value;
+
+      // Show phone only if entered
+      if (phone.trim()) {
+        document.getElementById("summaryPhoneContainer").style.display = "block";
+        document.getElementById("summaryPhone").innerText = phone;
+      } else {
+        document.getElementById("summaryPhoneContainer").style.display = "none";
+      }
+
+      hideAll();
+      document.getElementById("step5").style.display = "block";
+      updateStepBadge(5);
+    }
+
+
+    function hideAll() {
+      for (let i = 1; i <= 5; i++) {
+        const step = document.getElementById(`step${i}`);
+        if (step) step.style.display = "none";
+      }
+    }
+
+
+      function selectCategory(cat, el) {
+        document.getElementById("paymentCategory").value = cat;
+        document.querySelectorAll(".payment-card").forEach(card => card.classList.remove("selected"));
+        el.classList.add("selected");
+      }
+
+      function selectMethod(method, el) {
+        document.getElementById("paymentMethod").value = method;
+        document.querySelectorAll("#methodContainer .payment-card").forEach(card => card.classList.remove("selected"));
+        el.classList.add("selected");
+      }
+
+      function confirmPayment() {
+        const modal = document.getElementById('paymentModal');
+        const modalBody = modal.querySelector('.modal-body');
+        const modalDialog = modal.querySelector('.modal-dialog');
+
+        // Optional: reset size in case reused
+        modalDialog.classList.remove('modal-sm');
+
+        modalBody.innerHTML = `
+          <div class="text-center">
+            <div class="spinner-border text-success mb-3" role="status"></div>
+            <p>Processing payment...</p>
+          </div>
+        `;
+
+        // Simulate payment processing
+        setTimeout(() => {
+          // Shrink modal
+          modalDialog.classList.add('modal-sm');
+
+          // Show success message
+          modalBody.innerHTML = `
+            <div class="text-center text-success">
+              <i class="bi bi-check-circle-fill display-4"></i>
+              <h5 class="mt-2">Payment Successful!</h5>
+            </div>
+          `;
+
+          // Close modal after delay
+          setTimeout(() => {
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            modalInstance.hide();
+          }, 1500);
+        }, 2000);
+
+      }
+
+      function goBackToPhone() {
+      const method = document.getElementById("paymentMethod").value;
+      if (["MPESA", "Airtel Money"].includes(method)) {
+        hideAll();
+        document.getElementById("step4").style.display = "block";
+        updateStepBadge(4);
+      } else {
+        goToStep3();
+      }
+    }
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Global array to hold package data
+  let packageData = [];
+
+  // Fetch packages from API
+  async function fetchPackages() {
+    try {
+      const res = await fetch("https://api.exoticnairobi.com/api/products");
+      packageData = await res.json();
+      renderPackages();
+    } catch (err) {
+      console.error("Error fetching packages:", err);
+    }
+  }
+
+  // Render package cards from packageData array
+  function renderPackages() {
+    const container = document.getElementById("packageContainer");
+    container.innerHTML = "";
+
+    packageData.forEach(pkg => {
+      const col = document.createElement("div");
+      col.className = "col-12 col-md-4";
+
+      const card = document.createElement("div");
+      card.className = "card package-card h-100";
+      card.setAttribute("onclick", `selectPackage('${pkg.name}', ${parseFloat(pkg.price)}, this)`);
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+
+      const icon = document.createElement("i");
+      icon.className = "bi display-4";
+      const name = pkg.name.toLowerCase();
+      if (name.includes("vip")) icon.classList.add("bi-star-fill");
+      else if (name.includes("premium")) icon.classList.add("bi-gem");
+      else icon.classList.add("bi-box-fill");
+
+      const title = document.createElement("h5");
+      title.className = "mt-2";
+      title.textContent = pkg.name;
+
+      const price = document.createElement("p");
+      price.textContent = `${pkg.currency} ${parseFloat(pkg.price).toLocaleString()}`;
+
+      body.appendChild(icon);
+      body.appendChild(title);
+      body.appendChild(price);
+      card.appendChild(body);
+      col.appendChild(card);
+      container.appendChild(col);
+    });
+  }
+
+  // Highlight selected card and store package/price
+  function selectPackage(name, price, element) {
+    // Remove 'selected' class from all cards
+    document.querySelectorAll(".package-card").forEach(card => {
+      card.classList.remove("selected");
+    });
+
+    // Add 'selected' to the clicked card
+    element.classList.add("selected");
+
+    // Set hidden fields
+    document.getElementById("package").value = name;
+    document.getElementById("amount").value = price;
+  }
+
+  // Initial call to populate Step 1
+  window.addEventListener("DOMContentLoaded", fetchPackages); 
+</script>
+
+
+</body>
+</html>
